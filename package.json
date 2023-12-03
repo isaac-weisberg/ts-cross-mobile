@@ -1,0 +1,14 @@
+{
+  "name": "ts-cross-mobile",
+  "version": "0.0.1",
+  "description": "KMM my ass",
+  "main": "dist/index.js",
+  "author": "Isaac Weisberg",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.10.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2",
+    "@types/ts-expose-internals": "npm:ts-expose-internals@5.3.2"
+  }
+}
