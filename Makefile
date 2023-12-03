@@ -1,4 +1,6 @@
 def: sample_proj
 
 sample_proj:
-	npx ts-node ./src/index.ts ./sample_project/index.ts
+	npx ts-node ./src/index.ts \
+		./sample_project/index.ts \
+		./build/SampleProjectGenerated.swift
