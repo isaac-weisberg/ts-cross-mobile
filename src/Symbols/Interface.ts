@@ -1,4 +1,5 @@
 import * as ts from 'typescript'
+import { AnyType, scanAnyType } from './AnyType'
 
 
 export interface InterfaceDeclaration {
@@ -7,33 +8,18 @@ export interface InterfaceDeclaration {
 }
 
 
-type PropSignatureCustomTypeKind = 'typeref'
-type PropSignatureBuildInTypeKind = 'string' | 'number'
-
-interface PropSignatureCustomType {
-    kind: PropSignatureCustomTypeKind,
-    customTypeName: string
-}
-
-interface PropSignatureBuildInType {
-    kind: PropSignatureBuildInTypeKind
-}
-
-type PropSignatureType = PropSignatureBuildInType | PropSignatureCustomType
-
-interface PropSignature {
+export interface PropSignature {
     identifer: string
-    type: PropSignatureType
+    type: AnyType
 }
 
 export function scanInterfaceDeclaration(sourceFile: ts.SourceFile, interfaceDeclaration: ts.Node): InterfaceDeclaration|undefined {
     let identifier: string|undefined
     let props: PropSignature[] = []
+    
 
     ts.forEachChild(interfaceDeclaration, (child) => {
         switch (child.kind) {
-        case ts.SyntaxKind.ExportKeyword:
-            break
         case ts.SyntaxKind.Identifier:
             identifier = child.getText(sourceFile)
             break
@@ -60,30 +46,19 @@ export function scanInterfaceDeclaration(sourceFile: ts.SourceFile, interfaceDec
 }
 
 function scanPropSignature(sourceFile: ts.SourceFile, propSignature: ts.Node): PropSignature|undefined {
-    let id: string
-    let type: PropSignatureType|undefined
+    let id: string|undefined
+    let type: AnyType|undefined
 
     ts.forEachChild(propSignature, child => {
-        switch (child.kind) {
-        case ts.SyntaxKind.Identifier:
+        if (ts.isIdentifier(child)) {
             id = child.getText(sourceFile)
-            break
-        case ts.SyntaxKind.StringKeyword:
-            type = {
-                kind: 'string'
-            }
-            break
-        case ts.SyntaxKind.NumberKeyword:
-            type = {
-                kind: 'number'
-            }
-            break
-        case ts.SyntaxKind.TypeReference:
-            type = {
-                kind: 'typeref',
-                customTypeName: child.getText(sourceFile)
-            }
-            break
+            return
+        }
+        
+        const theType = scanAnyType(sourceFile, child)
+        if (theType) {
+            type = theType
+            return
         }
     })
 

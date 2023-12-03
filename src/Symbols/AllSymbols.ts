@@ -1,6 +1,8 @@
 import * as ts from 'typescript'
 import { InterfaceDeclaration, scanInterfaceDeclaration } from "./Interface"
+import { TypealiasDeclaration, scanTypealiasDeclaration } from './Typealias'
 
+type SymbolTypeTypealiasKind = 'typealias'
 type SymbolTypeInterfaceKind = 'interface'
 
 interface SymbolTypeInterface {
@@ -8,7 +10,12 @@ interface SymbolTypeInterface {
     interfaceDecl: InterfaceDeclaration
 }
 
-export type AnySymbol = SymbolTypeInterface
+interface SymbolTypeTypealias {
+    kind: SymbolTypeTypealiasKind
+    typealiasDecl: TypealiasDeclaration
+}
+
+export type AnySymbol = SymbolTypeInterface | SymbolTypeTypealias
 
 export function findAllSymbols(program: ts.Program): AnySymbol[] {
     let allSymbols: AnySymbol[] = []
@@ -46,9 +53,10 @@ function scanNodeForAnySymbols(sourceFile: ts.SourceFile, node: ts.Node, indenta
         nodeText = node.getText(sourceFile)
     }
 
-    // console.log(`${prexix}${ts.SyntaxKind[node.kind]}${nodeText?` ${nodeText}`: ''}`, )
+    console.log(`${prexix}${ts.SyntaxKind[node.kind]}${nodeText?` ${nodeText}`: ''}`, )
 
-    if (node.kind == ts.SyntaxKind.InterfaceDeclaration) {
+    switch (node.kind) {
+    case ts.SyntaxKind.InterfaceDeclaration:
         const interfaceDeclaration = scanInterfaceDeclaration(sourceFile, node)
 
         if (interfaceDeclaration) {
@@ -56,7 +64,18 @@ function scanNodeForAnySymbols(sourceFile: ts.SourceFile, node: ts.Node, indenta
                 kind: 'interface',
                 interfaceDecl: interfaceDeclaration
             })
-        }   
+        }
+        break
+    case ts.SyntaxKind.TypeAliasDeclaration:
+        const typealiasDeclaration = scanTypealiasDeclaration(sourceFile, node)
+
+        if (typealiasDeclaration) {
+            allSymbols.push({
+                kind: 'typealias',
+                typealiasDecl: typealiasDeclaration
+            })
+        }
+        break
     }
     ts.forEachChild(node, (child) => {
         const symbols = scanNodeForAnySymbols(sourceFile, child, indentationLevel + 1)

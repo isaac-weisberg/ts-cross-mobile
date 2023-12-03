@@ -17,20 +17,30 @@ export function generateSwiftFileForAllSymbols(symbols: AnySymbol[]): string {
 
             line(`struct ${interfaceDeclaration.identifier} {`)
 
+
             for (const prop of interfaceDeclaration.props) {
-                let type: string
+                function declarePropertyOfType(type: string) {
+                    line(`    let ${prop.identifer}: ${type}`)
+                }
+
+                function declareConstantString(valueLiteral: string) {
+                    line(`    let ${prop.identifer} = "${valueLiteral}"`)
+                }
+
                 switch (prop.type.kind) {
                 case 'number':
-                    type = 'Double'
+                    declarePropertyOfType('Double')
                     break
                 case 'string':
-                    type = 'String'
+                    declarePropertyOfType('String')
                     break
                 case 'typeref':
-                    type = prop.type.customTypeName
+                    declarePropertyOfType(prop.type.customTypeName)
+                    break
+                case 'stringliteral':
+                    declareConstantString(prop.type.literal)
                     break
                 }
-                line(`    let ${prop.identifer}: ${type}`)                
             }
 
             line('}')
