@@ -2,7 +2,7 @@ export interface UserDataStats {
     pigletsBorn: number
 }
 
-type UserKind = 'admin' | 'dopeDealer' | 'janitor' | 'teacher' | 'designer' | { otherUserType: string } | number
+type UserKind = 'admin' | 'dopeDealer' | 'janitor' | 'teacher' | 'designer' 
 
 export interface UserData {
     metaTypeName: 'UserData'

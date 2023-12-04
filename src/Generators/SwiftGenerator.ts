@@ -1,4 +1,6 @@
+import { type } from "os";
 import { AnySymbol } from "../Symbols/AllSymbols";
+import { LiteralTypeStringLiteral } from "../Symbols/Literal";
 
 export function generateSwiftFileForAllSymbols(symbols: AnySymbol[]): string {
     let file = ''
@@ -45,6 +47,40 @@ export function generateSwiftFileForAllSymbols(symbols: AnySymbol[]): string {
 
             line('}')
             line()
+
+            break
+        case 'typealias':
+            const typealias = symbol.typealiasDecl
+
+            switch (typealias.type.kind) {
+            case 'union':
+                const allTypesAreString = typealias.type.unionDeclaration.typesOfUnion.every(type => {
+                    return type.kind == 'stringliteral'
+                })
+
+                if (allTypesAreString) {
+                    // Good, means I can generate an enum
+
+                    line(`enum ${typealias.id}: String, Codable {`)
+                    for (const type of typealias.type.unionDeclaration.typesOfUnion) {
+                        const value = (type as LiteralTypeStringLiteral).literal
+
+                        line(`    case ${value}`)
+                    }
+
+                    line(`}`)
+                    line()
+
+                    break
+                }
+
+                // unsupported
+                
+                break
+            default:
+                // unsupported
+                break
+            }
 
             break
         }
