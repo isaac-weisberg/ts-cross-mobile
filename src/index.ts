@@ -13,6 +13,10 @@ if (!swiftFileOutput) {
     throw new Error('No Swift output file dir')
 }
 
+if (!fs.existsSync(entryPointParam)) {
+    throw new Error(`Entry point ${entryPointParam} doesn't exist`)
+}
+
 console.log('Scanning at', entryPointParam)
 
 const program = ts.createProgram({
