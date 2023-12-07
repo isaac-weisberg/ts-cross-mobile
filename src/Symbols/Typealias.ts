@@ -23,8 +23,6 @@ export function scanTypealiasDeclaration(sourceFile: ts.SourceFile, typealiasDec
         }
     })
 
-    console.log(`ASDF Typealias: ${id} type:`)
-    console.dir(type, { depth: null })
     if (id && type) {
         return {
             id,
