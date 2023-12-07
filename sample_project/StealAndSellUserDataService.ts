@@ -1,7 +1,15 @@
 import { IUserDataService, UserData } from './GetUserDataService'
 import { IUserDataSellingService } from './UserDataSellingService'
 
+export interface Opti<T, K, L> {
+
+}
+export interface OptiHaver {
+    opti: Opti<string, Opti<number, number, number>, 'penis'>
+}
+
 export interface IStealAndSellUserDataService {
+    genericallyReturnMeSomething(): Promise<Opti<string, Opti<number, number, number>, 'penis'>>
     stealAndSellUserData(): Promise<void>
 }
 
@@ -15,6 +23,10 @@ export class StealAndSellUserDataService implements IStealAndSellUserDataService
     ) {
         this.userDataSellingService = userDataSellingService
         this.userDataService = userDataService
+    }
+
+    genericallyReturnMeSomething(): Promise<Opti<string, Opti<number, number, number>, 'penis'>> {
+        return new Promise(_ => {})
     }
 
     async stealAndSellUserData() {

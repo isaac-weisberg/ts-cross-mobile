@@ -2,14 +2,14 @@ import * as ts from 'typescript'
 import { LiteralType, scanLiteralType } from './Literal'
 import { UnionDeclaration, scanUnionDeclaration } from './Union'
 
-
 type UnionTypeKind = 'union'
-type CustomTypeKind = 'typeref'
+type TypeReferenceTypeKind = 'typeref'
 type BuiltInTypeKind = 'string' | 'number'
 
-interface CustomType {
-    kind: CustomTypeKind,
-    customTypeName: string
+interface TypeReferenceType {
+    kind: TypeReferenceTypeKind,
+    identifier: string
+    genericTypeParameters: AnyType[]
 }
 
 interface BuiltInType {
@@ -21,7 +21,7 @@ interface UnionType {
     unionDeclaration: UnionDeclaration
 }
 
-export type AnyType = BuiltInType | CustomType | LiteralType | UnionType
+export type AnyType = BuiltInType | TypeReferenceType | LiteralType | UnionType
 
 export function scanAnyType(sourceFile: ts.SourceFile, node: ts.Node): AnyType|undefined {
     let type: AnyType|undefined
@@ -37,9 +37,9 @@ export function scanAnyType(sourceFile: ts.SourceFile, node: ts.Node): AnyType|u
         }
         break
     case ts.SyntaxKind.TypeReference:
-        type = {
-            kind: 'typeref',
-            customTypeName: node.getText(sourceFile)
+        const typeRef = scanTypeReference(sourceFile, node as ts.TypeReferenceType)
+        if (typeRef) {
+            type = typeRef
         }
         break
     case ts.SyntaxKind.LiteralType:
@@ -64,4 +64,29 @@ export function scanAnyType(sourceFile: ts.SourceFile, node: ts.Node): AnyType|u
     }
 
     return type
+}
+
+export function scanTypeReference(sourceFile: ts.SourceFile, typeref: ts.TypeReferenceType): TypeReferenceType|undefined {
+    let id: string|undefined
+    let genericTypeParams: AnyType[] = []
+
+    ts.forEachChild(typeref, child => {
+        if (ts.isIdentifier(child)) {
+            id = child.getText(sourceFile)
+            return
+        }
+
+        const anyType = scanAnyType(sourceFile, child)
+        if (anyType) {
+            genericTypeParams.push(anyType)
+        }
+    })
+    if (id) {
+        return {
+            kind: 'typeref',
+            identifier: id,
+            genericTypeParameters: genericTypeParams
+        }
+    }
+    return undefined
 }

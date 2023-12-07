@@ -37,7 +37,7 @@ export function generateSwiftFileForAllSymbols(symbols: AnySymbol[]): string {
                     declarePropertyOfType('String')
                     break
                 case 'typeref':
-                    declarePropertyOfType(prop.type.customTypeName)
+                    declarePropertyOfType(prop.type.identifier)
                     break
                 case 'stringliteral':
                     declareConstantString(prop.type.literal)
