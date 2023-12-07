@@ -9,11 +9,13 @@ export interface MethodSignatureParam {
 export interface MethodSignature {
     identifier: string
     params: MethodSignatureParam[]
+    returnType: AnyType|undefined
 }
 
 export function scanMethodSignature(sourceFile: ts.SourceFile, methodSignature: ts.Node): MethodSignature|undefined {
     let identifier: string|undefined
     let params: MethodSignatureParam[] = []
+    let returnType: AnyType|undefined
 
     ts.forEachChild(methodSignature, (child) => {
         if (ts.isIdentifier(child)) {
@@ -28,12 +30,19 @@ export function scanMethodSignature(sourceFile: ts.SourceFile, methodSignature: 
             }
             return
         }
+
+        const anyType = scanAnyType(sourceFile, child)
+        if (anyType) {
+            returnType = anyType
+            return
+        }
     })
 
-    if (identifier) {
+    if (identifier && returnType) {
         return {
             identifier,
-            params
+            params,
+            returnType
         }
     }
 

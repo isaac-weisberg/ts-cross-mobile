@@ -15,5 +15,6 @@ export interface UserData {
 }
 
 export interface IUserDataService {
+    voidMethod(): void
     getUserData(): Promise<UserData>
 }

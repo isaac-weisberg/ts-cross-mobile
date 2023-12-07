@@ -4,7 +4,7 @@ import { UnionDeclaration, scanUnionDeclaration } from './Union'
 
 type UnionTypeKind = 'union'
 type TypeReferenceTypeKind = 'typeref'
-type BuiltInTypeKind = 'string' | 'number'
+type BuiltInTypeKind = 'string' | 'number' | 'void'
 
 interface TypeReferenceType {
     kind: TypeReferenceTypeKind,
@@ -40,6 +40,11 @@ export function scanAnyType(sourceFile: ts.SourceFile, node: ts.Node): AnyType|u
         const typeRef = scanTypeReference(sourceFile, node as ts.TypeReferenceType)
         if (typeRef) {
             type = typeRef
+        }
+        break
+    case ts.SyntaxKind.VoidKeyword:
+        type = {
+            kind: 'void'
         }
         break
     case ts.SyntaxKind.LiteralType:
