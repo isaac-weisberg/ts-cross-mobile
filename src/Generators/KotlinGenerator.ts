@@ -1,5 +1,25 @@
 import { AnySymbol } from "../Symbols/AllSymbols";
+import { AnyType } from "../Symbols/AnyType";
 import { LiteralTypeStringLiteral } from "../Symbols/Literal";
+
+function getTypeIdentifierWriting(type: AnyType): string {
+    switch (type.kind) {
+        case 'number':
+            return 'Double'
+        case 'string':
+            return 'String'
+        case 'typeref':
+            return type.identifier
+        case 'stringliteral':
+            return `"${type.literal}" /* what else did you want? */`
+        case 'array':
+            return `Array<${getTypeIdentifierWriting(type.elementType)}>`
+        case 'void':
+            return 'Unit'
+        case 'union':
+            return type.unionDeclaration.typesOfUnion.map(type => getTypeIdentifierWriting(type)).join(' | ')
+    }
+}
 
 export function generateKotlinFileForAllSymbols(symbols: AnySymbol[]): string {
     let file = ''
@@ -17,7 +37,6 @@ export function generateKotlinFileForAllSymbols(symbols: AnySymbol[]): string {
 
             line(`data class ${interfaceDeclaration.identifier} (`)
 
-
             for (const prop of interfaceDeclaration.props) {
                 function declarePropertyOfType(type: string) {
                     line(`    val ${prop.identifer}: ${type}`)
@@ -27,20 +46,14 @@ export function generateKotlinFileForAllSymbols(symbols: AnySymbol[]): string {
                     line(`    val ${prop.identifer} = "${valueLiteral}"`)
                 }
 
-                switch (prop.type.kind) {
-                case 'number':
-                    declarePropertyOfType('Double')
-                    break
-                case 'string':
-                    declarePropertyOfType('String')
-                    break
-                case 'typeref':
-                    declarePropertyOfType(prop.type.identifier)
-                    break
-                case 'stringliteral':
+                if (prop.type.kind == 'stringliteral') {
                     declareStringParamWithDefaultValue(prop.type.literal)
-                    break
+                    continue
                 }
+
+                const typeWriting = getTypeIdentifierWriting(prop.type)
+
+                declarePropertyOfType(typeWriting)
             }
 
             line(')')

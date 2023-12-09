@@ -71,5 +71,6 @@ function scanMethodSignatureParam(sourceFile: ts.SourceFile, param: ts.Parameter
             id, type
         }
     }
+    return undefined
 }
 

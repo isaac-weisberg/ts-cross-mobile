@@ -1,5 +1,25 @@
 import { AnySymbol } from "../Symbols/AllSymbols";
+import { AnyType } from "../Symbols/AnyType";
 import { LiteralTypeStringLiteral } from "../Symbols/Literal";
+
+function getTypeIdentifierWriting(type: AnyType): string {
+    switch (type.kind) {
+        case 'number':
+            return 'Double'
+        case 'string':
+            return 'String'
+        case 'typeref':
+            return type.identifier
+        case 'stringliteral':
+            return `"${type.literal}" /* what else did you want? */`
+        case 'array':
+            return `[${getTypeIdentifierWriting(type.elementType)}]`
+        case 'void':
+            return 'Void'
+        case 'union':
+            return type.unionDeclaration.typesOfUnion.map(type => getTypeIdentifierWriting(type)).join(' | ')
+    }
+}
 
 export function generateSwiftFileForAllSymbols(symbols: AnySymbol[]): string {
     let file = ''
@@ -27,21 +47,14 @@ export function generateSwiftFileForAllSymbols(symbols: AnySymbol[]): string {
                 function declareConstantString(valueLiteral: string) {
                     line(`    let ${prop.identifer} = "${valueLiteral}"`)
                 }
-
-                switch (prop.type.kind) {
-                case 'number':
-                    declarePropertyOfType('Double')
-                    break
-                case 'string':
-                    declarePropertyOfType('String')
-                    break
-                case 'typeref':
-                    declarePropertyOfType(prop.type.identifier)
-                    break
-                case 'stringliteral':
+                
+                if (prop.type.kind == 'stringliteral') {
                     declareConstantString(prop.type.literal)
-                    break
+                    continue
                 }
+
+                const typeWriting = getTypeIdentifierWriting(prop.type)
+                declarePropertyOfType(typeWriting)
             }
 
             line('}')

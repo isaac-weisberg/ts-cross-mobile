@@ -11,6 +11,7 @@ export function scanArrayType(sourceFile: ts.SourceFile, arrayNode: ts.ArrayType
             elementType = anyType
             return true
         }
+        return undefined
     })
 
     if (elementType) {
