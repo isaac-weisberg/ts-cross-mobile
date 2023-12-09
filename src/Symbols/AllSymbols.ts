@@ -57,6 +57,10 @@ function scanNodeForAnySymbols(sourceFile: ts.SourceFile, node: ts.Node, indenta
 
     switch (node.kind) {
     case ts.SyntaxKind.InterfaceDeclaration:
+        if (!shouldScanTheNodeProperly(sourceFile, node)) {
+            return []
+        }
+
         const interfaceDeclaration = scanInterfaceDeclaration(sourceFile, node)
 
         if (interfaceDeclaration) {
@@ -67,6 +71,9 @@ function scanNodeForAnySymbols(sourceFile: ts.SourceFile, node: ts.Node, indenta
         }
         break
     case ts.SyntaxKind.TypeAliasDeclaration:
+        if (!shouldScanTheNodeProperly(sourceFile, node)) {
+            return []
+        }
         const typealiasDeclaration = scanTypealiasDeclaration(sourceFile, node)
 
         if (typealiasDeclaration) {
@@ -83,4 +90,24 @@ function scanNodeForAnySymbols(sourceFile: ts.SourceFile, node: ts.Node, indenta
     })
 
     return allSymbols
+}
+
+function shouldScanTheNodeProperly(sourceFile: ts.SourceFile, node: ts.Node): boolean {
+    const commentRanges = ts.getLeadingCommentRanges(
+        sourceFile.getFullText(),
+        node.getFullStart()
+    )
+
+    if (commentRanges) {
+        const hasTag = commentRanges.some(range => {
+            const commentText = sourceFile.getFullText().substring(range.pos, range.end);
+            return commentText.includes('// gen');
+        });
+
+        if (hasTag) {
+            return true
+        }
+    }
+
+    return false
 }
