@@ -1,15 +1,22 @@
 import * as ts from 'typescript'
 import { LiteralType, scanLiteralType } from './Literal'
 import { UnionDeclaration, scanUnionDeclaration } from './Union'
+import { scanArrayType } from './Array'
 
 type UnionTypeKind = 'union'
 type TypeReferenceTypeKind = 'typeref'
+type ArrayTypeKind = 'array'
 type BuiltInTypeKind = 'string' | 'number' | 'void'
 
 interface TypeReferenceType {
     kind: TypeReferenceTypeKind,
     identifier: string
     genericTypeParameters: AnyType[]
+}
+
+export interface ArrayType {
+    kind: ArrayTypeKind
+    elementType: AnyType
 }
 
 interface BuiltInType {
@@ -21,7 +28,7 @@ interface UnionType {
     unionDeclaration: UnionDeclaration
 }
 
-export type AnyType = BuiltInType | TypeReferenceType | LiteralType | UnionType
+export type AnyType = BuiltInType | TypeReferenceType | LiteralType | UnionType | ArrayType
 
 export function scanAnyType(sourceFile: ts.SourceFile, node: ts.Node): AnyType|undefined {
     let type: AnyType|undefined
@@ -62,6 +69,13 @@ export function scanAnyType(sourceFile: ts.SourceFile, node: ts.Node): AnyType|u
                 kind: 'union',
                 unionDeclaration: unionDecl
             }
+        }
+        break
+    case ts.SyntaxKind.ArrayType:
+        const arrayDecl = scanArrayType(sourceFile, node as ts.ArrayTypeNode)
+
+        if (arrayDecl) {
+            type = arrayDecl
         }
         break
     default:
