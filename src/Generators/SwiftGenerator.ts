@@ -32,12 +32,19 @@ export function generateSwiftFileForAllSymbols(symbols: AnySymbol[]): string {
     line()
 
     for (const symbol of symbols) {
+        if (!symbol.generationOptions.shouldGenerate) {
+            continue
+        }
+
         switch (symbol.kind) {
         case 'interface':
             const interfaceDeclaration = symbol.interfaceDecl
 
-            line(`struct ${interfaceDeclaration.identifier} {`)
-
+            if (symbol.generationOptions.shouldGenerateJsonSerialization) {
+                line(`struct ${interfaceDeclaration.identifier}: Codable {`)
+            } else {
+                line(`struct ${interfaceDeclaration.identifier} {`)
+            }
 
             for (const prop of interfaceDeclaration.props) {
                 function declarePropertyOfType(type: string) {
@@ -73,7 +80,13 @@ export function generateSwiftFileForAllSymbols(symbols: AnySymbol[]): string {
                 if (allTypesAreString) {
                     // Good, means I can generate an enum
 
-                    line(`enum ${typealias.id}: String, Codable {`)
+                    if (symbol.generationOptions.shouldGenerateJsonSerialization) {
+                        line(`enum ${typealias.id}: String, Codable {`)
+                    } else {
+                        line(`enum ${typealias.id} {`)
+                    }
+
+                    
                     for (const type of typealias.type.unionDeclaration.typesOfUnion) {
                         const value = (type as LiteralTypeStringLiteral).literal
 
