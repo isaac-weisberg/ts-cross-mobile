@@ -31,10 +31,17 @@ export function generateKotlinFileForAllSymbols(symbols: AnySymbol[]): string {
     line()
 
     for (const symbol of symbols) {
+        if (!symbol.generationOptions.shouldGenerate) {
+            continue
+        }
+
         switch (symbol.kind) {
         case 'interface':
             const interfaceDeclaration = symbol.interfaceDecl
 
+            if (symbol.generationOptions.shouldGenerateJsonSerialization) {
+                line('@Serializable')
+            }
             line(`data class ${interfaceDeclaration.identifier} (`)
 
             for (const prop of interfaceDeclaration.props) {
@@ -75,8 +82,14 @@ export function generateKotlinFileForAllSymbols(symbols: AnySymbol[]): string {
                     line(`enum class ${typealias.id} {`)
                     for (const type of typealias.type.unionDeclaration.typesOfUnion) {
                         const value = (type as LiteralTypeStringLiteral).literal
+                        const firstCharCapitalized = value.charAt(0).toUpperCase()
+                        const capitalizedValue = firstCharCapitalized + value.slice(1)
 
-                        line(`    ${value},`)
+                        if (symbol.generationOptions.shouldGenerateJsonSerialization) {
+                            line(`    @SerialName("${value}") ${capitalizedValue},`)
+                        } else {
+                            line(`    ${capitalizedValue},`)
+                        }
                     }
 
                     line(`}`)

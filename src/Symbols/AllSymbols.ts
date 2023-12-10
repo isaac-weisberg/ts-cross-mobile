@@ -5,14 +5,22 @@ import { TypealiasDeclaration, scanTypealiasDeclaration } from './Typealias'
 type SymbolTypeTypealiasKind = 'typealias'
 type SymbolTypeInterfaceKind = 'interface'
 
-interface SymbolTypeInterface {
-    kind: SymbolTypeInterfaceKind,
-    interfaceDecl: InterfaceDeclaration
+interface GenerationOptions {
+    shouldScan: boolean
+    shouldGenerate: boolean
+    shouldGenerateJsonSerialization: boolean
 }
 
-interface SymbolTypeTypealias {
+export interface SymbolTypeInterface {
+    kind: SymbolTypeInterfaceKind,
+    interfaceDecl: InterfaceDeclaration
+    generationOptions: GenerationOptions
+}
+
+export interface SymbolTypeTypealias {
     kind: SymbolTypeTypealiasKind
     typealiasDecl: TypealiasDeclaration
+    generationOptions: GenerationOptions
 }
 
 export type AnySymbol = SymbolTypeInterface | SymbolTypeTypealias
@@ -54,32 +62,32 @@ function scanNodeForAnySymbols(sourceFile: ts.SourceFile, node: ts.Node, indenta
     }
 
     console.log(`${prexix}${ts.SyntaxKind[node.kind]}${nodeText?` ${nodeText}`: ''}`, )
+    
+    const generationOpts = getGenerationOptions(sourceFile, node)
+    if (!generationOpts.shouldScan) {
+        return []
+    }
 
     switch (node.kind) {
     case ts.SyntaxKind.InterfaceDeclaration:
-        if (!shouldScanTheNodeProperly(sourceFile, node)) {
-            return []
-        }
-
         const interfaceDeclaration = scanInterfaceDeclaration(sourceFile, node)
 
         if (interfaceDeclaration) {
             allSymbols.push({
                 kind: 'interface',
-                interfaceDecl: interfaceDeclaration
+                interfaceDecl: interfaceDeclaration,
+                generationOptions: generationOpts
             })
         }
         break
     case ts.SyntaxKind.TypeAliasDeclaration:
-        if (!shouldScanTheNodeProperly(sourceFile, node)) {
-            return []
-        }
         const typealiasDeclaration = scanTypealiasDeclaration(sourceFile, node)
 
         if (typealiasDeclaration) {
             allSymbols.push({
                 kind: 'typealias',
-                typealiasDecl: typealiasDeclaration
+                typealiasDecl: typealiasDeclaration,
+                generationOptions: generationOpts
             })
         }
         break
@@ -92,22 +100,31 @@ function scanNodeForAnySymbols(sourceFile: ts.SourceFile, node: ts.Node, indenta
     return allSymbols
 }
 
-function shouldScanTheNodeProperly(sourceFile: ts.SourceFile, node: ts.Node): boolean {
+function getGenerationOptions(sourceFile: ts.SourceFile, node: ts.Node): GenerationOptions {
+    let shouldGenerate: boolean|undefined
+    let shouldGenerateJson: boolean|undefined
+
     const commentRanges = ts.getLeadingCommentRanges(
         sourceFile.getFullText(),
         node.getFullStart()
     )
 
     if (commentRanges) {
-        const hasTag = commentRanges.some(range => {
+        commentRanges.forEach(range => {
             const commentText = sourceFile.getFullText().substring(range.pos, range.end);
-            return commentText.includes('// gen');
-        });
+            if (commentText.includes('gen')) {
+                shouldGenerate = true
+            }
 
-        if (hasTag) {
-            return true
-        }
+            if (commentText.includes('json')) {
+                shouldGenerateJson = true
+            }
+        })
     }
 
-    return false
+    return {
+        shouldScan: true, 
+        shouldGenerate: shouldGenerate || false,
+        shouldGenerateJsonSerialization: shouldGenerateJson || false
+    }
 }
