@@ -24,7 +24,7 @@ function getTypeIdentifierWriting(type: AnyType): string {
 export function generateSwiftFileForAllSymbols(symbols: AnySymbol[]): string {
     let file = ''
 
-    function text(str: string) { file += text }
+    function text(str: string) { file += str }
     function line(str: string|undefined = undefined) { if (str) { file += `${str}\n` } else { file += '\n' } }
 
     line('// swiftlint:disable all')
