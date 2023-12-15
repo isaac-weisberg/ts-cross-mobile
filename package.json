@@ -1,8 +1,8 @@
 {
   "name": "ts-cross-mobile",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "KMM my ass",
-  "main": "dist/index.js",
+  "main": "dist/bin/index.js",
   "author": "Isaac Weisberg",
   "license": "ISC",
   "dependencies": {
@@ -15,5 +15,6 @@
   },
   "files": [
     "dist/"
-  ]
+  ],
+  "bin": "dist/bin/injex.js"
 }
