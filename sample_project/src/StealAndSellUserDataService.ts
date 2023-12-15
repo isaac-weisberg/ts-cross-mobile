@@ -1,18 +1,23 @@
 import { IUserDataService, UserData } from './GetUserDataService'
 import { IUserDataSellingService } from './UserDataSellingService'
 
+// gen
 export interface Opti<T, K, L> {
 
 }
+
+// gen
 export interface OptiHaver {
     opti: Opti<string, Opti<number, number, number>, 'penis'>
 }
 
+// gen
 export interface IStealAndSellUserDataService {
     genericallyReturnMeSomething(): Promise<Opti<string, Opti<number, number, number>, 'penis'>>
     stealAndSellUserData(): Promise<void>
 }
 
+// gen
 export class StealAndSellUserDataService implements IStealAndSellUserDataService {
     userDataSellingService: IUserDataSellingService
     userDataService: IUserDataService

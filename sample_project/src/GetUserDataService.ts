@@ -1,9 +1,12 @@
+// gen
 export interface UserDataStats {
     pigletsBorn: number
 }
 
+// gen
 type UserKind = 'admin' | 'dopeDealer' | 'janitor' | 'teacher' | 'designer' 
 
+// gen
 export interface UserData {
     metaTypeName: 'UserData'
     firstName: string
@@ -14,6 +17,7 @@ export interface UserData {
     kind: UserKind
 }
 
+// gen
 export interface IUserDataService {
     voidMethod(): void
     getUserData(): Promise<UserData>
