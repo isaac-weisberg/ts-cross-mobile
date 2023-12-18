@@ -38,6 +38,72 @@ function generateHeader(shouldImportSerialization: boolean): string {
     return txt
 }
 
+function getCanonicalEnumCaseName(originalCaseName: string): string {
+    const value = originalCaseName
+    if (value.length == 0) {
+        return ''
+    }
+    let canonicalKotlinName = ''
+
+    const firstChar = value.charAt(0)
+    const firstCharUppercased = firstChar.toUpperCase()
+    const firstCharIsUppercase = firstChar == firstCharUppercased
+
+    canonicalKotlinName += firstCharUppercased
+
+    function undersored(char: string) { canonicalKotlinName += `_${char}` }
+    function raw(char: string) { canonicalKotlinName += char }
+
+
+    let prevCharWasUppercase = firstCharIsUppercase
+    let weInASequenceOf2UppercaseChars = false
+    for (let x = 1, char = ''; char = value.charAt(x); x++) { 
+        const charUppercased = char.toUpperCase()
+        const thisCharIsUppercased = char == charUppercased
+
+
+        const shouldUnderscore = weInASequenceOf2UppercaseChars && !thisCharIsUppercased
+            || !prevCharWasUppercase && thisCharIsUppercased
+        weInASequenceOf2UppercaseChars = weInASequenceOf2UppercaseChars && thisCharIsUppercased 
+            || prevCharWasUppercase && thisCharIsUppercased
+
+        
+        if (shouldUnderscore) {
+            undersored(charUppercased)
+        } else {
+            raw(charUppercased)
+        }
+        
+        // if (weInASequenceOf2UppercaseChars) {
+        //     if (thisCharIsUppercased) {
+        //         weInASequenceOf2UppercaseChars = true
+        //         raw(charUppercased)
+        //     } else {
+        //         weInASequenceOf2UppercaseChars = false
+        //         undersored(charUppercased)
+        //     }
+        // } else {
+        //     if (prevCharWasUppercase && thisCharIsUppercased) {
+        //         weInASequenceOf2UppercaseChars = true
+        //         raw(charUppercased)
+        //     } else if (!prevCharWasUppercase && thisCharIsUppercased) {
+        //         weInASequenceOf2UppercaseChars = false
+        //         undersored(charUppercased)
+        //     } else if (prevCharWasUppercase && !thisCharIsUppercased) {
+        //         weInASequenceOf2UppercaseChars = false
+        //         raw(charUppercased)
+        //     } else {
+        //         weInASequenceOf2UppercaseChars = false
+        //         raw(charUppercased)
+        //     }
+        // }
+
+        prevCharWasUppercase = thisCharIsUppercased
+    }
+
+    return canonicalKotlinName
+}
+
 function generateSymbol(symbol: AnySymbol): string|undefined {
     let txt = ''
     function text(str: string) { txt += str }
@@ -91,75 +157,22 @@ function generateSymbol(symbol: AnySymbol): string|undefined {
                         line('@Serializable')
                     }
                     line(`enum class ${typealias.id} {`)
-                    for (const type of typealias.type.unionDeclaration.typesOfUnion) {
+
+                    for (const [index, type] of typealias.type.unionDeclaration.typesOfUnion.entries()) {
                         const value = (type as LiteralTypeStringLiteral).literal
-
-                        if (value.length == 0) {
-                            continue
-                        }
-                        let canonicalKotlinName = ''
-
-                        const firstChar = value.charAt(0)
-                        const firstCharUppercased = firstChar.toUpperCase()
-                        const firstCharIsUppercase = firstChar == firstCharUppercased
-
-                        canonicalKotlinName += firstCharUppercased
-
-                        function undersored(char: string) { canonicalKotlinName += `_${char}` }
-                        function raw(char: string) { canonicalKotlinName += char }
-
-
-                        let prevCharWasUppercase = firstCharIsUppercase
-                        let weInASequenceOf2UppercaseChars = false
-                        for (let x = 1, char = ''; char = value.charAt(x); x++) { 
-                            const charUppercased = char.toUpperCase()
-                            const thisCharIsUppercased = char == charUppercased
-
-
-                            const shouldUnderscore = weInASequenceOf2UppercaseChars && !thisCharIsUppercased
-                                || !prevCharWasUppercase && thisCharIsUppercased
-                            weInASequenceOf2UppercaseChars = weInASequenceOf2UppercaseChars && thisCharIsUppercased 
-                                || prevCharWasUppercase && thisCharIsUppercased
-
-                            
-                            if (shouldUnderscore) {
-                                undersored(charUppercased)
-                            } else {
-                                raw(charUppercased)
-                            }
-                            
-                            // if (weInASequenceOf2UppercaseChars) {
-                            //     if (thisCharIsUppercased) {
-                            //         weInASequenceOf2UppercaseChars = true
-                            //         raw(charUppercased)
-                            //     } else {
-                            //         weInASequenceOf2UppercaseChars = false
-                            //         undersored(charUppercased)
-                            //     }
-                            // } else {
-                            //     if (prevCharWasUppercase && thisCharIsUppercased) {
-                            //         weInASequenceOf2UppercaseChars = true
-                            //         raw(charUppercased)
-                            //     } else if (!prevCharWasUppercase && thisCharIsUppercased) {
-                            //         weInASequenceOf2UppercaseChars = false
-                            //         undersored(charUppercased)
-                            //     } else if (prevCharWasUppercase && !thisCharIsUppercased) {
-                            //         weInASequenceOf2UppercaseChars = false
-                            //         raw(charUppercased)
-                            //     } else {
-                            //         weInASequenceOf2UppercaseChars = false
-                            //         raw(charUppercased)
-                            //     }
-                            // }
-
-                            prevCharWasUppercase = thisCharIsUppercased
-                        }
+                        const canonicalCaseName = getCanonicalEnumCaseName(value)
 
                         if (symbol.generationOptions.shouldGenerateJsonSerialization) {
                             line(`    @SerialName("${value}")`)
                         }
-                        line(`    ${canonicalKotlinName},`)
-                        line()
+                        line(`    ${canonicalCaseName},`)
+
+                        const shouldAddEmptyLineAfterThisCase = symbol.generationOptions.shouldGenerateJsonSerialization
+                            && index < typealias.type.unionDeclaration.typesOfUnion.length - 1 // i.e. not last
+
+                        if (shouldAddEmptyLineAfterThisCase) {
+                            line()
+                        }
                     }
 
                     line(`}`)

@@ -1,6 +1,6 @@
 {
   "name": "ts-cross-mobile",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "KMM my ass",
   "main": "dist/bin/index.js",
   "author": "Isaac Weisberg",

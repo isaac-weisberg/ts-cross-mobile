@@ -8,7 +8,7 @@ sample_proj:
 	npx ts-node ./src/index.ts \
 		./sample_project/src/index.ts \
 		./sample_project/build/SampleProjectGenerated.swift \
-		./sample_project/build/SampleProjectGenerated.kt
+		./sample_project/build/SampleProjectGenerated.kt > ./sample_project/build/sample_proj.log
 
 full: build run_build
 

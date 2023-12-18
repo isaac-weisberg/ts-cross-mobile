@@ -22,3 +22,8 @@ export interface IUserDataService {
     voidMethod(): void
     getUserData(): Promise<UserData>
 }
+
+
+const enum OppaAiDibidi {
+    skibidiToilet = 'sdf'
+}
